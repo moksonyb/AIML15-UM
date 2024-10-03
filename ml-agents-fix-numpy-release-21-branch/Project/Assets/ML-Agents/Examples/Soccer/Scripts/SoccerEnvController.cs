@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Unity.MLAgents;
 using UnityEngine;
+using TMPro;
 
 public class SoccerEnvController : MonoBehaviour
 {
@@ -47,6 +48,12 @@ public class SoccerEnvController : MonoBehaviour
 
     private int m_ResetTimer;
 
+    public TMP_Text scoreDisplay;
+    public bool resetScore = false;
+
+    private int blueScoreValue;
+    private int purpleScoreValue;
+
     void Start()
     {
 
@@ -56,6 +63,17 @@ public class SoccerEnvController : MonoBehaviour
         m_PurpleAgentGroup = new SimpleMultiAgentGroup();
         ballRb = ball.GetComponent<Rigidbody>();
         m_BallStartingPos = new Vector3(ball.transform.position.x, ball.transform.position.y, ball.transform.position.z);
+
+        scoreDisplay = GetComponent<TextMeshProUGUI>();
+        scoreDisplay.text = "Start!";
+
+        if (resetScore)
+        {
+            // Reset the score to 0! (action)
+            blueScoreValue = 0;
+            purpleScoreValue = 0;
+        }
+
         foreach (var item in AgentsList)
         {
             item.StartingPos = item.Agent.transform.position;
@@ -70,6 +88,7 @@ public class SoccerEnvController : MonoBehaviour
                 m_PurpleAgentGroup.RegisterAgent(item.Agent);
             }
         }
+        scoreDisplay.text = blueScoreValue.ToString() + ":" + purpleScoreValue.ToString();
         ResetScene();
     }
 
@@ -98,18 +117,22 @@ public class SoccerEnvController : MonoBehaviour
 
     public void GoalTouched(Team scoredTeam)
     {
+        Debug.Log("GoalTouched");
         if (scoredTeam == Team.Blue)
         {
             m_BlueAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
             m_PurpleAgentGroup.AddGroupReward(-1);
+            blueScoreValue = blueScoreValue + 1;
         }
         else
         {
             m_PurpleAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
             m_BlueAgentGroup.AddGroupReward(-1);
+            purpleScoreValue = purpleScoreValue + 1;
         }
         m_PurpleAgentGroup.EndGroupEpisode();
         m_BlueAgentGroup.EndGroupEpisode();
+        scoreDisplay.text = blueScoreValue.ToString() + ":" + purpleScoreValue.ToString();
         ResetScene();
 
     }
@@ -118,6 +141,7 @@ public class SoccerEnvController : MonoBehaviour
     public void ResetScene()
     {
         m_ResetTimer = 0;
+        ResetBall();
 
         //Reset Agents
         foreach (var item in AgentsList)
@@ -131,8 +155,5 @@ public class SoccerEnvController : MonoBehaviour
             item.Rb.velocity = Vector3.zero;
             item.Rb.angularVelocity = Vector3.zero;
         }
-
-        //Reset Ball
-        ResetBall();
     }
 }
