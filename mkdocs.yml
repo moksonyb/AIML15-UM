@@ -1,0 +1,4 @@
+site_name: Champions.of.the.C.U.B.E.
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
