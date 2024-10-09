@@ -1,4 +1,4 @@
-# My Project Documentation
+# Champions of the C.U.B.E. Documentation
 
 Welcome to the documentation for Champions of the C.U.B.E.
 

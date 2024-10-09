@@ -1,4 +1,10 @@
 site_name: Champions.of.the.C.U.B.E.
 nav:
   - Home: index.md
-  - Getting Started: getting-started.md
+  - Getting Started
+    - Requriements: 'Getting started/Requriements.md'
+    - Installation: 'Getting started/Installation.md'
+  - Structure and models:
+    - Block diagram: 'Structure and models/Block diagram.md'
+theme:
+  name: material
