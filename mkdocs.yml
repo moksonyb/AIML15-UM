@@ -1,4 +1,4 @@
-site_name: Champions.of.the.C.U.B.E.
+site_name: Champions of the C.U.B.E.
 nav:
   - Home: index.md
   - Getting Started:
@@ -8,3 +8,10 @@ nav:
     - Block diagram: 'Structure and models/Block diagram.md'
 theme:
   name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+plugins:
+  - search
