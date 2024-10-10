@@ -57,16 +57,6 @@ With the virtual environment activated, install ML-Agents:
 pip install mlagents
 ```
 
-## Running ML-Agents in Unity
-
-1. Open your Unity project.
-2. In the Unity Console, select **Play Mode** to ensure everything is working correctly.
-3. To begin training, open a terminal, navigate to your ML-Agents folder, and run:
-   ```bash
-   mlagents-learn config/trainer_config.yaml --run-id=<your_run_id>
-   ```
-   Replace `<your_run_id>` with an identifier for the training session.
-
 ## Testing and Modifying Code
 
 Modify the Unity scenes and ML-Agents scripts as needed to create custom behaviors. Document any changes in your GitHub repository for easy collaboration.
