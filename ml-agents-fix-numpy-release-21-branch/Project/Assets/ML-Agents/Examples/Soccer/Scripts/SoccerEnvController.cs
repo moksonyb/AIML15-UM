@@ -56,41 +56,83 @@ public class SoccerEnvController : MonoBehaviour
 
     void Start()
     {
-
         m_SoccerSettings = FindObjectOfType<SoccerSettings>();
+
+        if (m_SoccerSettings == null)
+        {
+            Debug.LogError("SoccerSettings not found in the scene.");
+        }
+
         // Initialize TeamManager
         m_BlueAgentGroup = new SimpleMultiAgentGroup();
         m_PurpleAgentGroup = new SimpleMultiAgentGroup();
-        ballRb = ball.GetComponent<Rigidbody>();
-        m_BallStartingPos = new Vector3(ball.transform.position.x, ball.transform.position.y, ball.transform.position.z);
 
-        scoreDisplay = GetComponent<TextMeshProUGUI>();
-        scoreDisplay.text = "Start!";
+        if (ball == null)
+        {
+            Debug.LogError("Ball is not assigned in SoccerEnvController.");
+            ball = GameObject.Find("Ball"); // Adjust name if necessary
+        }
+
+        if (ball != null)
+        {
+            ballRb = ball.GetComponent<Rigidbody>();
+            m_BallStartingPos = new Vector3(ball.transform.position.x, ball.transform.position.y, ball.transform.position.z);
+        }
+
+        if (scoreDisplay == null)
+        {
+            Debug.LogError("ScoreDisplay (TextMeshProUGUI) is not assigned in SoccerEnvController.");
+            scoreDisplay = GetComponentInChildren<TextMeshProUGUI>(); // Adjust if needed
+        }
+
+        if (scoreDisplay != null)
+        {
+            scoreDisplay.text = "Start!";
+        }
 
         if (resetScore)
         {
-            // Reset the score to 0! (action)
             blueScoreValue = 0;
             purpleScoreValue = 0;
         }
 
+        if (AgentsList == null || AgentsList.Count == 0)
+        {
+            Debug.LogError("AgentsList is empty or not assigned in SoccerEnvController.");
+            // Optionally populate AgentsList dynamically if needed.
+        }
+
         foreach (var item in AgentsList)
         {
-            item.StartingPos = item.Agent.transform.position;
-            item.StartingRot = item.Agent.transform.rotation;
-            item.Rb = item.Agent.GetComponent<Rigidbody>();
-            if (item.Agent.team == Team.Blue)
+            if (item.Agent != null)
             {
-                m_BlueAgentGroup.RegisterAgent(item.Agent);
+                item.StartingPos = item.Agent.transform.position;
+                item.StartingRot = item.Agent.transform.rotation;
+                item.Rb = item.Agent.GetComponent<Rigidbody>();
+
+                if (item.Agent.team == Team.Blue)
+                {
+                    m_BlueAgentGroup.RegisterAgent(item.Agent);
+                }
+                else
+                {
+                    m_PurpleAgentGroup.RegisterAgent(item.Agent);
+                }
             }
             else
             {
-                m_PurpleAgentGroup.RegisterAgent(item.Agent);
+                Debug.LogError("An agent in AgentsList is null.");
             }
         }
-        scoreDisplay.text = blueScoreValue.ToString() + ":" + purpleScoreValue.ToString();
+
+        if (scoreDisplay != null)
+        {
+            scoreDisplay.text = blueScoreValue.ToString() + ":" + purpleScoreValue.ToString();
+        }
+
         ResetScene();
     }
+
 
     void FixedUpdate()
     {

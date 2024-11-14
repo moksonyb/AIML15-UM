@@ -2,14 +2,16 @@ using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
+using Unity.MLAgents.Sensors;
 
-public enum Team
+
+/*public enum Team
 {
     Blue = 0,
     Purple = 1
-}
+}*/
 
-public class AgentSoccer : Agent
+public class CustomAgent: Agent
 {
     // Note that that the detectable tags are different for the blue and purple teams. The order is
     // * ball
@@ -38,6 +40,10 @@ public class AgentSoccer : Agent
     float m_LateralSpeed;
     float m_ForwardSpeed;
 
+    public float soundDetectionRadius = 10f; // Radius within which sounds are detected
+    public LayerMask detectableObjectsLayer; // Layer mask for detectable objects
+
+
 
     [HideInInspector]
     public Rigidbody agentRb;
@@ -47,6 +53,14 @@ public class AgentSoccer : Agent
     public float rotSign;
 
     EnvironmentParameters m_ResetParams;
+
+    void Start()
+    {
+        // Set detectableObjectsLayer in Start to avoid constructor initialization issues
+        detectableObjectsLayer = LayerMask.GetMask("SoundSource");
+    }
+
+
 
     public override void Initialize()
     {
@@ -142,22 +156,20 @@ public class AgentSoccer : Agent
             ForceMode.VelocityChange);
     }
 
+
     public override void OnActionReceived(ActionBuffers actionBuffers)
-
     {
-
         if (position == Position.Goalie)
         {
-            // Existential bonus for Goalies.
             AddReward(m_Existential);
         }
         else if (position == Position.Striker)
         {
-            // Existential penalty for Strikers
             AddReward(-m_Existential);
         }
         MoveAgent(actionBuffers.DiscreteActions);
     }
+
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
@@ -190,28 +202,101 @@ public class AgentSoccer : Agent
             discreteActionsOut[1] = 2;
         }
     }
+
+
     /// <summary>
-    /// Used to provide a "kick" to the ball.
+    /// Used to provide rewards based on collisions with specific objects.
+    /// Rewards for hitting the ball and penalizes for colliding with other agents.
     /// </summary>
-    void OnCollisionEnter(Collision c)
+    void OnCollisionEnter(Collision collision)
     {
-        var force = k_Power * m_KickPower;
-        if (position == Position.Goalie)
+        // Reward for colliding with the ball
+        if (collision.gameObject.CompareTag("ball"))
         {
-            force = k_Power;
-        }
-        if (c.gameObject.CompareTag("ball"))
-        {
-            var dir = c.contacts[0].point - transform.position;
+            var force = k_Power * m_KickPower;
+            if (position == Position.Goalie)
+            {
+                force = k_Power;
+            }
+
+            // Apply force to the ball and reward the agent
+            var dir = collision.contacts[0].point - transform.position;
             dir = dir.normalized;
-            c.gameObject.GetComponent<Rigidbody>().AddForce(dir * force);
+            collision.gameObject.GetComponent<Rigidbody>().AddForce(dir * force);
+
+            AddReward(0.2f * m_BallTouch);  // Positive reward for hitting the ball
+            Debug.Log($"{gameObject.name} hit the ball and received a reward.");
+        }
+        // Penalty for colliding with other agents
+        else if (collision.gameObject.CompareTag("agent"))
+        {
+            AddReward(-0.1f);  // Negative reward (penalty) for hitting another agent
+            Debug.Log($"{gameObject.name} collided with another agent and received a penalty.");
         }
     }
 
 
-    public override void OnEpisodeBegin()
+    public override void CollectObservations(VectorSensor sensor)
     {
-        m_BallTouch = m_ResetParams.GetWithDefault("ball_touch", 0);
+        var testSensor = sensor ?? new VectorSensor(10); // Replace with new sensor if null
+        DetectNearbyObjects(testSensor);
     }
+
+
+    void DetectNearbyObjects(VectorSensor sensor)
+    {
+
+        if (sensor == null)
+        {
+            return; // Exit early if sensor is null
+        }
+
+        Debug.Log($"{gameObject.name} is attempting detection.");
+
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, soundDetectionRadius, detectableObjectsLayer);
+
+        if (hitColliders == null)
+        {
+            return;
+        }
+
+        foreach (var hitCollider in hitColliders)
+        {
+            if (hitCollider == null)
+            {
+                continue;
+            }
+
+            var hitRigidbody = hitCollider.GetComponent<Rigidbody>();
+            if (hitRigidbody == null)
+            {
+                continue;
+            }
+
+            if (hitCollider.gameObject == gameObject)
+            {
+                // Ignore self-detection
+                continue;
+            }
+
+            Vector3 directionToTarget = (hitCollider.transform.position - transform.position).normalized;
+            float distanceToTarget = Vector3.Distance(transform.position, hitCollider.transform.position);
+
+            // Log the detected object details
+            Debug.Log($"{gameObject.name} detected {hitCollider.gameObject.name} at distance {distanceToTarget}");
+
+            if (sensor != null)
+            {
+                sensor.AddObservation(directionToTarget);
+                sensor.AddObservation(distanceToTarget);
+            }
+            else
+            {
+                Debug.LogError("Sensor is null in DetectNearbyObjects.");
+            }
+        }
+    }
+
+
 
 }
