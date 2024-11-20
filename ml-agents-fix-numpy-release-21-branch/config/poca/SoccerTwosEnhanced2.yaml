@@ -1,0 +1,37 @@
+behaviors:
+  SoccerTwos:
+    trainer_type: poca
+    hyperparameters:
+      batch_size: 8192
+      buffer_size: 81920  # Increased from 40960 for better gradient estimates
+      learning_rate: 0.0003
+      beta: 0.01  # Promotes exploration
+      epsilon: 0.2
+      lambd: 0.95
+      num_epoch: 5  # Increased from 4 for better gradient updates
+      learning_rate_schedule: linear  # Fixed to 'linear'
+    network_settings:
+      normalize: true  # Input normalization for stability
+      hidden_units: 1024  # Reduce to 1024
+      num_layers: 3  # Reduce to 3
+      vis_encode_type: resnet  # Enhanced feature extraction
+      inference_device: gpu
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+      curiosity:
+        gamma: 0.99
+        strength: 0.01  # Encourages exploration
+    keep_checkpoints: 5
+    max_steps: 5000000
+    time_horizon: 1500  # Increased from 1000 to account for longer-term rewards
+    summary_freq: 10000
+    self_play:
+      save_steps: 10000
+      team_change: 200000
+      swap_steps: 2000
+      window: 30  # Increased from 20 for wider variety of opponents
+      play_against_latest_model_ratio: 0.85  # Increased from 0.7 for tougher opponents
+      initial_elo: 1200.0
+

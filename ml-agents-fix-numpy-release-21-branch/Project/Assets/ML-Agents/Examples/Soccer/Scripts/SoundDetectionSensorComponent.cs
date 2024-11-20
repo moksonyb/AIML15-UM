@@ -11,7 +11,7 @@ public class SoundDetectionSensorComponent : SensorComponent
     public int maxObjects = 4;
 
     [Tooltip("Detection radius for sound.")]
-    public float detectionRadius = 10f;
+    public float detectionRadius = 15f;
 
     [Tooltip("Layer mask for detectable objects.")]
     public LayerMask detectableLayer;
